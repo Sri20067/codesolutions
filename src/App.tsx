@@ -10,20 +10,24 @@ import Contests from "./pages/Contests";
 import ContestDetail from "./pages/ContestDetail";
 import ProblemDetail from "./pages/ProblemDetail";
 import AdminDashboard from "./pages/AdminDashboard";
+import { AuthProvider } from "./contexts/AuthContext";
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="contests" element={<Contests />} />
-          <Route path="contests/:slug" element={<ContestDetail />} />
-          <Route path="problems/:slug" element={<ProblemDetail />} />
-          <Route path="admin" element={<AdminDashboard />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="contests" element={<Contests />} />
+            <Route path="contests/:slug" element={<ContestDetail />} />
+            <Route path="problems/:slug" element={<ProblemDetail />} />
+            <Route path="admin" element={<AdminDashboard />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
+
 

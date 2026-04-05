@@ -1,10 +1,31 @@
 import { Link } from "react-router-dom";
-import { mockContests } from "../data/mock";
+import { useEffect, useState } from "react";
+import { getPublishedContests } from "../lib/db";
+import { Contest } from "../data/mock";
 import { format } from "date-fns";
 import { Calendar, ChevronRight } from "lucide-react";
 
 export default function Contests() {
-  const publishedContests = mockContests.filter(c => c.isPublished);
+  const [publishedContests, setPublishedContests] = useState<Contest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const contests = await getPublishedContests();
+        setPublishedContests(contests);
+      } catch (error) {
+        console.error("Failed to load contests", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return <div className="py-20 text-center text-gray-500">Loading...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "Contest": {
+      "title": "Contest",
+      "description": "A CodeChef contest",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the contest"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Date of the contest"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the contest"
+        },
+        "slug": {
+          "type": "string",
+          "description": "URL slug for the contest"
+        },
+        "isPublished": {
+          "type": "boolean",
+          "description": "Whether the contest is published"
+        },
+        "publishAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the contest should be published"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["title", "date", "slug", "isPublished"]
+    },
+    "Problem": {
+      "title": "Problem",
+      "description": "A problem from a CodeChef contest",
+      "type": "object",
+      "properties": {
+        "contestId": {
+          "type": "string",
+          "description": "ID of the contest this problem belongs to"
+        },
+        "problemCode": {
+          "type": "string",
+          "description": "CodeChef problem code"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the problem"
+        },
+        "slug": {
+          "type": "string",
+          "description": "URL slug for the problem"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["Beginner", "Easy", "Medium", "Hard"]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "statement": {
+          "type": "string",
+          "description": "Markdown statement"
+        },
+        "approach": {
+          "type": "string",
+          "description": "Markdown approach"
+        },
+        "timeComplexity": {
+          "type": "string"
+        },
+        "spaceComplexity": {
+          "type": "string"
+        },
+        "solutions": {
+          "type": "object",
+          "properties": {
+            "cpp": { "type": "string" },
+            "java": { "type": "string" },
+            "python": { "type": "string" }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["contestId", "problemCode", "title", "slug", "difficulty", "statement", "approach"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the application",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "user"]
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/contests/{contestId}": {
+      "schema": {
+        "$ref": "#/entities/Contest"
+      },
+      "description": "Stores contests"
+    },
+    "/problems/{problemId}": {
+      "schema": {
+        "$ref": "#/entities/Problem"
+      },
+      "description": "Stores problems"
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "Stores user roles"
+    }
+  }
+}

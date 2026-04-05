@@ -1,17 +1,22 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Code2, LayoutDashboard, Search, Menu, X } from "lucide-react";
+import { Code2, Search, Menu, X, LogIn, LogOut } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../lib/utils";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Layout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin, signIn, logOut } = useAuth();
 
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Contests", path: "/contests" },
-    { name: "Admin", path: "/admin" },
   ];
+
+  if (isAdmin) {
+    navLinks.push({ name: "Admin", path: "/admin" });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
@@ -54,6 +59,24 @@ export default function Layout() {
                   className="pl-9 pr-4 py-1.5 text-sm bg-gray-100 border-transparent rounded-full focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none w-64"
                 />
               </div>
+              
+              {user ? (
+                <button
+                  onClick={logOut}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={signIn}
+                  className="flex items-center gap-2 text-sm font-medium text-white bg-blue-600 px-4 py-2 rounded-full hover:bg-blue-700 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Login
+                </button>
+              )}
             </nav>
 
             {/* Mobile menu button */}
@@ -95,6 +118,25 @@ export default function Layout() {
                   className="w-full pl-10 pr-4 py-2 text-base bg-gray-100 border-transparent rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none"
                 />
               </div>
+            </div>
+            <div className="mt-4 px-3">
+              {user ? (
+                <button
+                  onClick={() => { logOut(); setIsMobileMenuOpen(false); }}
+                  className="flex w-full items-center justify-center gap-2 text-base font-medium text-red-600 bg-red-50 px-4 py-2 rounded-lg"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={() => { signIn(); setIsMobileMenuOpen(false); }}
+                  className="flex w-full items-center justify-center gap-2 text-base font-medium text-white bg-blue-600 px-4 py-2 rounded-lg"
+                >
+                  <LogIn className="w-5 h-5" />
+                  Login
+                </button>
+              )}
             </div>
           </div>
         )}

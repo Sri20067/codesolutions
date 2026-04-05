@@ -1,11 +1,36 @@
 import { Link } from "react-router-dom";
-import { mockContests, mockProblems } from "../data/mock";
+import { useEffect, useState } from "react";
+import { getPublishedContests, getAllProblems } from "../lib/db";
+import { Contest, Problem } from "../data/mock";
 import { format } from "date-fns";
 import { Calendar, ChevronRight, Trophy, Code } from "lucide-react";
 
 export default function Home() {
-  const latestContests = mockContests.filter(c => c.isPublished).slice(0, 3);
-  const featuredProblems = mockProblems.slice(0, 4);
+  const [latestContests, setLatestContests] = useState<Contest[]>([]);
+  const [featuredProblems, setFeaturedProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const contests = await getPublishedContests();
+        setLatestContests(contests.slice(0, 3));
+        
+        // For featured problems, we'll just grab the first 4 for now
+        const problems = await getAllProblems();
+        setFeaturedProblems(problems.slice(0, 4));
+      } catch (error) {
+        console.error("Failed to load data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  if (loading) {
+    return <div className="py-20 text-center text-gray-500">Loading...</div>;
+  }
 
   return (
     <div className="space-y-12">

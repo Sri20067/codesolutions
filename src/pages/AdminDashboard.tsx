@@ -1,10 +1,62 @@
-import { useState } from "react";
-import { mockContests, mockProblems } from "../data/mock";
-import { Plus, Edit2, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { getAllContests, getAllProblems, seedDatabase } from "../lib/db";
+import { Contest, Problem } from "../data/mock";
+import { Plus, Edit2, Trash2, CheckCircle, XCircle, Database } from "lucide-react";
 import { format } from "date-fns";
+import { useAuth } from "../contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"contests" | "problems">("contests");
+  const [contests, setContests] = useState<Contest[]>([]);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+  const { isAdmin, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    async function loadData() {
+      if (!isAdmin) return;
+      try {
+        const [c, p] = await Promise.all([getAllContests(), getAllProblems()]);
+        setContests(c);
+        setProblems(p);
+      } catch (error) {
+        console.error("Failed to load admin data", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (!authLoading) {
+      loadData();
+    }
+  }, [isAdmin, authLoading]);
+
+  const handleSeed = async () => {
+    if (window.confirm("This will overwrite existing data with mock data. Continue?")) {
+      setSeeding(true);
+      try {
+        await seedDatabase();
+        const [c, p] = await Promise.all([getAllContests(), getAllProblems()]);
+        setContests(c);
+        setProblems(p);
+        alert("Database seeded successfully!");
+      } catch (error) {
+        console.error("Failed to seed database", error);
+        alert("Failed to seed database.");
+      } finally {
+        setSeeding(false);
+      }
+    }
+  };
+
+  if (authLoading || loading) {
+    return <div className="py-20 text-center text-gray-500">Loading...</div>;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -13,10 +65,20 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-1">Manage contests and problem solutions.</p>
         </div>
-        <button className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-          <Plus className="w-5 h-5" />
-          Add {activeTab === "contests" ? "Contest" : "Problem"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleSeed}
+            disabled={seeding}
+            className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors disabled:opacity-50"
+          >
+            <Database className="w-5 h-5" />
+            {seeding ? "Seeding..." : "Seed Mock Data"}
+          </button>
+          <button className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+            <Plus className="w-5 h-5" />
+            Add {activeTab === "contests" ? "Contest" : "Problem"}
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
@@ -54,7 +116,13 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {mockContests.map((contest) => (
+                  {contests.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                        No contests found. Click "Seed Mock Data" to populate.
+                      </td>
+                    </tr>
+                  ) : contests.map((contest) => (
                     <tr key={contest.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">{contest.title}</div>
@@ -102,8 +170,14 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {mockProblems.map((problem) => {
-                    const contest = mockContests.find(c => c.id === problem.contestId);
+                  {problems.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        No problems found. Click "Seed Mock Data" to populate.
+                      </td>
+                    </tr>
+                  ) : problems.map((problem) => {
+                    const contest = contests.find(c => c.id === problem.contestId);
                     return (
                       <tr key={problem.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">

@@ -1,17 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { mockProblems, mockContests } from "../data/mock";
+import { getProblemBySlug, getContestBySlug } from "../lib/db";
+import { Problem, Contest } from "../data/mock";
 import { ArrowLeft, Clock, HardDrive, Tag } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import CodeBlock from "../components/CodeBlock";
 import { cn } from "../lib/utils";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 export default function ProblemDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const problem = mockProblems.find(p => p.slug === slug);
-  const contest = problem ? mockContests.find(c => c.id === problem.contestId) : null;
+  const [problem, setProblem] = useState<Problem | null>(null);
+  const [contest, setContest] = useState<Contest | null>(null);
+  const [loading, setLoading] = useState(true);
   
   const [activeTab, setActiveTab] = useState<"cpp" | "java" | "python">("cpp");
+
+  useEffect(() => {
+    async function loadData() {
+      if (!slug) return;
+      try {
+        const p = await getProblemBySlug(slug);
+        setProblem(p);
+        if (p) {
+          const cDoc = await getDoc(doc(db, "contests", p.contestId));
+          if (cDoc.exists()) {
+            setContest({ id: cDoc.id, ...cDoc.data() } as Contest);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load problem details", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [slug]);
+
+  if (loading) {
+    return <div className="py-20 text-center text-gray-500">Loading...</div>;
+  }
 
   if (!problem || !contest) {
     return (

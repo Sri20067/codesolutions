@@ -1,11 +1,38 @@
 import { useParams, Link } from "react-router-dom";
-import { mockContests, mockProblems } from "../data/mock";
+import { useEffect, useState } from "react";
+import { getContestBySlug, getProblemsByContest } from "../lib/db";
+import { Contest, Problem } from "../data/mock";
 import { format } from "date-fns";
 import { Calendar, ArrowLeft, ChevronRight } from "lucide-react";
 
 export default function ContestDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const contest = mockContests.find(c => c.slug === slug);
+  const [contest, setContest] = useState<Contest | null>(null);
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      if (!slug) return;
+      try {
+        const c = await getContestBySlug(slug);
+        setContest(c);
+        if (c) {
+          const p = await getProblemsByContest(c.id);
+          setProblems(p);
+        }
+      } catch (error) {
+        console.error("Failed to load contest details", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [slug]);
+
+  if (loading) {
+    return <div className="py-20 text-center text-gray-500">Loading...</div>;
+  }
   
   if (!contest) {
     return (
@@ -15,8 +42,6 @@ export default function ContestDetail() {
       </div>
     );
   }
-
-  const problems = mockProblems.filter(p => p.contestId === contest.id);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
